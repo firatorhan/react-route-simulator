@@ -4,9 +4,11 @@ import styles from "./FormPage.module.css";
 import { Icons } from "../../components/icons";
 import { useState } from "react";
 import Modal from "../../components/modal/Modal";
+import Map from "../../components/map/Map";
 
 export default function FormPage() {
   const [open, setOpen] = useState(false);
+
   return (
     <div className={styles.pageLayout}>
       <div className={styles.card}>
@@ -40,6 +42,9 @@ export default function FormPage() {
                 <h3 className="modal-title">title</h3>
                 <p className="modal-desc">desc</p>
               </div>
+            </div>
+            <div>
+              <Map />
             </div>
             <div className="modal-actions">
               <button type="button">Deactivate</button>
