@@ -27,6 +27,7 @@ const CoordinateField: React.FC<CoordinateFieldProps> = ({
         type="text"
         step="any"
         id={name}
+        readOnly
         name={name}
         value={value}
         onChange={onChange}

@@ -56,6 +56,7 @@ export default function FormPage() {
           />
           {route.slice(1).map((r, index) => (
             <CoordinateField
+              key={`${r[0]}, ${r[1]}`}
               label={`Way Point ${index + 1}`}
               name="point1"
               value={`${r[0]}, ${r[1]}`}
