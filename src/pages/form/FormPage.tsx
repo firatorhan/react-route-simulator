@@ -8,11 +8,7 @@ import Map from "../../components/map/Map";
 export default function FormPage() {
   const [open, setOpen] = useState(false);
 
-  const [route, setRoute] = useState<[number, number][]>([
-    [41.015137, 28.97953],
-    [41.025137, 28.98953],
-    [41.035137, 28.97953],
-  ]);
+  const [route, setRoute] = useState<[number, number][]>([[40.1516, 25.8805]]);
   const [tempRoute, setTempRoute] = useState<[number, number][]>([]);
 
   const handleOpenModal = () => {
@@ -28,6 +24,19 @@ export default function FormPage() {
   const handleCancel = () => {
     setOpen(false);
   };
+  const handleAddPoint = () => {
+    const lastPoint = route[route.length - 1];
+
+    const newPoint: [number, number] = [
+      Number((lastPoint[0] + 0.015).toFixed(4)),
+      Number(lastPoint[1].toFixed(4)),
+    ];
+
+    const newRoute: [number, number][] = [...route, newPoint];
+
+    setTempRoute(newRoute);
+    setOpen(true);
+  };
 
   return (
     <div className={styles.pageLayout}>
@@ -36,7 +45,6 @@ export default function FormPage() {
           <h2 className={styles.title}>Welcome aboard!</h2>
           <p className={styles.description}>Let’s create your journey.</p>
         </div>
-
         <form className={styles.form}>
           <CoordinateField
             label="Start Point"
@@ -46,31 +54,28 @@ export default function FormPage() {
             onChange={() => console.log("change")}
             onClick={handleOpenModal}
           />
-          <CoordinateField
-            label="Way Point 1"
-            name="point1"
-            value={`${route[1][0]}, ${route[1][1]}`}
-            icon={<Icons.flag />}
-            onChange={() => console.log("change")}
-            onClick={handleOpenModal}
-          />
-          <CoordinateField
-            label="Way Point 2"
-            name="point2"
-            value={`${route[2][0]}, ${route[2][1]}`}
-            icon={<Icons.mapCheck />}
-            onChange={() => console.log("change")}
-          />
+          {route.slice(1).map((r, index) => (
+            <CoordinateField
+              label={`Way Point ${index + 1}`}
+              name="point1"
+              value={`${r[0]}, ${r[1]}`}
+              icon={<Icons.mapCheck />}
+              onChange={() => console.log("change")}
+              onClick={handleOpenModal}
+            />
+          ))}
+          <div className={styles.addPoint} onClick={handleAddPoint}>
+            <Icons.add />
+            <span>Add Way Point</span>
+          </div>
         </form>
 
         {open && (
           <Modal onClose={handleCancel}>
-            <div className="modal-body">
-              <div>
-                <h3 className="modal-title">Rota düzenle</h3>
-                <p className="modal-desc">
-                  Noktaları sürükleyerek konumlarını değiştir.
-                </p>
+            <div className={styles.modalBody}>
+              <div className={styles.modalHeader}>
+                <h3>Rota düzenle</h3>
+                <p>Noktaları sürükleyerek konumlarını değiştir.</p>
               </div>
 
               <div>
@@ -79,13 +84,12 @@ export default function FormPage() {
                   onRouteChange={(newRoute) => setTempRoute(newRoute)}
                 />
               </div>
-
-              <div className="modal-actions">
-                <button type="button" onClick={handleApprove}>
-                  Approve new route
-                </button>
+              <div className={styles.modalActions}>
                 <button type="button" onClick={handleCancel}>
                   Cancel
+                </button>
+                <button type="button" onClick={handleApprove}>
+                  Approve new route
                 </button>
               </div>
             </div>
