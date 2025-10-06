@@ -19,7 +19,6 @@
 .input {
   padding: 10px 40px 10px 20px;
   border: 1px solid var(--color-text);
-  border-radius: 0.375rem;
   font-size: var(--font-md);
   border-radius: 50px;
 }

@@ -1,0 +1,44 @@
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: end;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(17, 24, 39, 0.6);
+  animation: fadeIn 180ms ease-out;
+  align-items: center;
+}
+
+.modalPanel {
+  background: var(--color-bg);
+  width: 90vw;
+  height: 90vh;
+  border-radius: 12px;
+  overflow: hidden;
+  transform-origin: center;
+  animation: popIn 220ms ease-out;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes popIn {
+  from {
+    transform: translateY(12px) scale(0.995);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
