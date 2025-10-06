@@ -1,10 +1,10 @@
 import React, { useEffect, type JSX } from "react";
 import styles from "./Modal.module.css";
 
-type ModalProps = {
+interface ModalProps {
   onClose: () => void;
   children?: React.ReactNode;
-};
+}
 
 export default function Modal({ children, onClose }: ModalProps): JSX.Element {
   useEffect(() => {

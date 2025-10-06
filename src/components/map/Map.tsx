@@ -7,24 +7,45 @@ import {
   TileLayer,
 } from "react-leaflet";
 import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+import { useEffect, useState } from "react";
 
-// Marker ikonunu düzeltmek için (default ikon sorunlu olabilir)
-const markerIcon = new L.Icon({
-  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-});
+interface MapProps {
+  route: [number, number][];
+  onRouteChange?: (newRoute: [number, number][]) => void;
+}
 
-export default function Map() {
-  const route: [number, number][] = [
-    [41.015137, 28.97953],
-    [41.025137, 28.98953],
-    [41.035137, 28.97953],
-  ];
+export default function Map({ route, onRouteChange }: MapProps) {
+  const [localRoute, setLocalRoute] = useState<[number, number][]>([]);
+
+  const handleMarkerDrag = (index: number, event: L.LeafletEvent) => {
+    const marker = event.target as L.Marker;
+    const newPos = marker.getLatLng();
+
+    const lat = Number(newPos.lat.toFixed(4));
+    const lng = Number(newPos.lng.toFixed(4));
+
+    const newRoute = [...localRoute];
+    newRoute[index] = [lat, lng];
+    setLocalRoute(newRoute);
+
+    if (onRouteChange) {
+      onRouteChange(newRoute);
+    }
+
+    console.log(`Nokta ${index + 1} yeni konumu:`, lat, lng);
+  };
+
+  useEffect(() => {
+    setLocalRoute(route);
+  }, [route]);
+
+  if (localRoute.length === 0) return null;
+
   return (
     <MapContainer
       className={styles.mapContainer}
-      center={route[0]}
+      center={localRoute[0]}
       zoom={13}
       scrollWheelZoom={true}
     >
@@ -33,14 +54,19 @@ export default function Map() {
         attribution="&copy; OpenStreetMap contributors"
       />
 
-      {route.map((pos, idx) => (
-        <Marker key={idx} position={pos} icon={markerIcon}>
+      {localRoute.map((pos, idx) => (
+        <Marker
+          key={idx}
+          position={pos}
+          draggable={true}
+          eventHandlers={{
+            dragend: (e) => handleMarkerDrag(idx, e),
+          }}
+        >
           <Popup>{`Nokta ${idx + 1}`}</Popup>
         </Marker>
       ))}
-
-      {/* Rota çizgisi */}
-      <Polyline positions={route} color="blue" />
+      <Polyline positions={localRoute} color="blue" />
     </MapContainer>
   );
 }
