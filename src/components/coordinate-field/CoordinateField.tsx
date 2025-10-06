@@ -1,10 +1,13 @@
 import React, { type ChangeEvent } from "react";
 import styles from "./CoordinateField.module.css";
 
+type inputType = "number" | "text";
+
 interface CoordinateFieldProps {
   label: string;
   name: string;
   value: string | number;
+  type?: inputType;
   onChange: (e: ChangeEvent<HTMLInputElement>) => void;
   onClick?: () => void;
   icon?: React.ReactNode;
@@ -14,6 +17,7 @@ const CoordinateField: React.FC<CoordinateFieldProps> = ({
   label,
   name,
   value,
+  type = "text",
   onChange,
   onClick,
   icon,
@@ -24,10 +28,9 @@ const CoordinateField: React.FC<CoordinateFieldProps> = ({
         {label}
       </label>
       <input
-        type="text"
+        type={type}
         step="any"
         id={name}
-        readOnly
         name={name}
         value={value}
         onChange={onChange}

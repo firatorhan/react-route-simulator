@@ -9,6 +9,7 @@ import {
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useEffect, useState } from "react";
+import CoordinateField from "../coordinate-field/CoordinateField";
 
 interface MapProps {
   route: [number, number][];
@@ -91,21 +92,45 @@ export default function Map({ route, onRouteChange }: MapProps) {
         <Marker
           key={idx}
           position={pos}
-          icon={createHtmlMarker(`${idx > 0 ? `WP ${idx} ` : "SP"}`, idx)}
+          icon={createHtmlMarker(`${idx > 0 ? `WP ${idx}` : "SP"}`, idx)}
           draggable
           eventHandlers={{
             dragend: (e) => handleMarkerDrag(idx, e),
           }}
         >
           <Popup>
-            <div>
-              <span>Lat: {pos[0]}</span>
-              <br />
-              <span>Lng: {pos[1]}</span>
+            <div className={styles.popupCoordinate}>
+              <CoordinateField
+                label="latitude"
+                name="latitude"
+                value={pos[0]}
+                type="number"
+                onChange={(e) => {
+                  const newLat = Number(e.target.value);
+                  const newRoute = [...localRoute];
+                  newRoute[idx] = [newLat, newRoute[idx][1]];
+                  setLocalRoute(newRoute);
+                  if (onRouteChange) onRouteChange(newRoute);
+                }}
+              />
+              <CoordinateField
+                label="longitude"
+                name="longitude"
+                type="number"
+                value={pos[1]}
+                onChange={(e) => {
+                  const newLng = Number(e.target.value);
+                  const newRoute = [...localRoute];
+                  newRoute[idx] = [newRoute[idx][0], newLng];
+                  setLocalRoute(newRoute);
+                  if (onRouteChange) onRouteChange(newRoute);
+                }}
+              />
             </div>
           </Popup>
         </Marker>
       ))}
+
       <Polyline positions={localRoute} color="white" dashArray={[10]} />
     </MapContainer>
   );
