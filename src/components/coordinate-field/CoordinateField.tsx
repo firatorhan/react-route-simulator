@@ -8,7 +8,8 @@ interface CoordinateFieldProps {
   name: string;
   value: string | number;
   type?: inputType;
-  onChange: (e: ChangeEvent<HTMLInputElement>) => void;
+  disabled?: boolean;
+  onChange?: (e: ChangeEvent<HTMLInputElement>) => void;
   onClick?: () => void;
   icon?: React.ReactNode;
 }
@@ -17,6 +18,7 @@ const CoordinateField: React.FC<CoordinateFieldProps> = ({
   label,
   name,
   value,
+  disabled,
   type = "text",
   onChange,
   onClick,
@@ -32,6 +34,7 @@ const CoordinateField: React.FC<CoordinateFieldProps> = ({
         step="any"
         id={name}
         name={name}
+        disabled={disabled}
         value={value}
         onChange={onChange}
         onClick={onClick}

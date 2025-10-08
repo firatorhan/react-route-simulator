@@ -5,11 +5,13 @@ import { useState } from "react";
 import Modal from "../../components/modal/Modal";
 import Map from "../../components/map/Map";
 import { useNavigate } from "react-router-dom";
+import { useRoute } from "../../context/RouteContext";
 
 export default function FormPage() {
   const navigate = useNavigate();
+  const { setRoute, route } = useRoute();
+
   const [open, setOpen] = useState(false);
-  const [route, setRoute] = useState<[number, number][]>([[40.1516, 25.8805]]);
   const [tempRoute, setTempRoute] = useState<[number, number][]>([]);
 
   const handleOpenModal = () => {
@@ -40,7 +42,7 @@ export default function FormPage() {
   };
 
   const handleGo = () => {
-    navigate("/simulation"); // ✅ yönlendirme burası
+    navigate("/simulation");
   };
 
   return (
@@ -79,16 +81,17 @@ export default function FormPage() {
           <Modal onClose={handleCancel}>
             <div className={styles.modalBody}>
               <div className={styles.modalHeader}>
-                <h3>Rota düzenle</h3>
-                <p>Noktaları sürükleyerek konumlarını değiştir.</p>
+                <h3>Edit route</h3>
+                <p>Drag the points to change their positions.</p>
               </div>
 
-              <div>
+              <div className={styles.mapContainerWrapper}>
                 <Map
                   route={tempRoute}
                   onRouteChange={(newRoute) => setTempRoute(newRoute)}
                 />
               </div>
+
               <div className={styles.modalActions}>
                 <button type="button" onClick={handleCancel}>
                   Cancel

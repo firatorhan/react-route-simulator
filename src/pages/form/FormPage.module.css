@@ -68,19 +68,25 @@
   border-radius: 10px;
   display: flex;
   flex-direction: column;
+  height: 100%;
   gap: 10px;
 }
 .modalHeader {
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
 }
+.mapContainerWrapper {
+  flex: 1 1 auto; /* kalan tüm alan map için */
+  min-height: 200px; /* opsiyonel minimum yükseklik */
+}
 
 .modalActions {
+  flex: 0 0 auto;
   display: flex;
   justify-content: end;
   gap: 10px;
 }
-
 
 .modalActions button:first-child {
   background: var(--color-desctructive);
@@ -88,7 +94,7 @@
   font-size: var(--font-md);
   border: none;
   border-radius: 23px;
-  padding: 10px;
+  padding: 10px 20px;
   cursor: pointer;
 }
 
@@ -98,6 +104,6 @@
   font-size: var(--font-md);
   border: none;
   border-radius: 23px;
-  padding: 10px;
+  padding: 10px 20px;
   cursor: pointer;
 }
