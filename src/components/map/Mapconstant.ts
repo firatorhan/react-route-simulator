@@ -53,7 +53,7 @@ export const createHtmlMarker = (label: string, index: number) => {
 export const boatIcon = (angle: number) =>
   L.divIcon({
     className: "boat-icon",
-    html: `<span style="transform: rotate(${angle}deg)">${BOAT_ICON_SVG}</span>`,
+    html: `<div style="transform: rotate(${angle}deg)">${BOAT_ICON_SVG}</div>`,
     iconSize: [40, 40],
     iconAnchor: [20, 20],
   });

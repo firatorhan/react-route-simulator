@@ -28,11 +28,15 @@ export default function FormPage() {
     setOpen(false);
   };
   const handleAddPoint = () => {
+    if (route.length >= 7) {
+      alert("You can add a maximum of 7 points to the route.");
+      return;
+    }
     const lastPoint = route[route.length - 1];
 
     const newPoint: [number, number] = [
-      Number((lastPoint[0] + 0.015).toFixed(4)),
-      Number(lastPoint[1].toFixed(4)),
+      Number((lastPoint[0] + 0.3).toFixed(4)),
+      Number((lastPoint[1] + route.length * 0.1).toFixed(4)),
     ];
 
     const newRoute: [number, number][] = [...route, newPoint];
@@ -72,7 +76,13 @@ export default function FormPage() {
               onClick={handleOpenModal}
             />
           ))}
-          <div className={styles.addPoint} onClick={handleAddPoint}>
+
+          <div
+            className={`${styles.addPoint} ${
+              route.length >= 7 ? styles.disabledAddPoint : ""
+            }`}
+            onClick={handleAddPoint}
+          >
             <Icons.add />
             <span>Add Way Point</span>
           </div>

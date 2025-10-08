@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useRoute } from "../../context/RouteContext";
 import Map from "../../components/map/Map";
-import Styles from "./SimulationPage.module.css";
 
 interface WindData {
   windDirection: number;
@@ -11,10 +10,13 @@ interface WindData {
 export default function SimulationPage() {
   const { route } = useRoute();
   const [currentPos, setCurrentPos] = useState<[number, number] | null>(null);
-  const [wind, setWind] = useState<WindData | null>(null);
-  const speedKts = 7; // Sabit hız
+  const [boatDir, setboatDir] = useState<number | null>(null);
 
-  const fetchWind = async (lat: number, lon: number) => {
+  const speedKts = 7; // Sabit hız (knot)
+  const intervalMs = 1000; // 1 saniye
+  const EARTH_R = 6371; // km
+
+  const fetchWind = async (lat: number, lon: number): Promise<WindData> => {
     const res = await fetch(
       `https://weather-api.dugun.work/?latitude=${lat}&longitude=${lon}`
     );
@@ -22,16 +24,21 @@ export default function SimulationPage() {
     return json.data as WindData;
   };
 
-  // --- İki nokta arası yön hesaplama 0-360 derece arası ---
+  // Küresel yön (bearing) hesaplama
   const calculateBoatDir = (start: [number, number], end: [number, number]) => {
-    const deltaLng = end[1] - start[1];
-    const deltaLat = end[0] - start[0];
-    let angle = (Math.atan2(deltaLng, deltaLat) * 180) / Math.PI;
-    if (angle < 0) angle += 360;
-    return Math.round(angle);
+    const [lat1, lon1] = start.map((d) => (d * Math.PI) / 180);
+    const [lat2, lon2] = end.map((d) => (d * Math.PI) / 180);
+
+    const y = Math.sin(lon2 - lon1) * Math.cos(lat2);
+    const x =
+      Math.cos(lat1) * Math.sin(lat2) -
+      Math.sin(lat1) * Math.cos(lat2) * Math.cos(lon2 - lon1);
+    let brng = (Math.atan2(y, x) * 180) / Math.PI;
+    setboatDir((brng + 360) % 360);
+    return (brng + 360) % 360;
   };
 
-  // --- Rüzgarın tekne hızına etkisini hesapla ---
+  // Rüzgar etkisiyle efektif hız
   const calculateEffectiveSpeed = (
     boatDir: number,
     windDir: number,
@@ -39,68 +46,142 @@ export default function SimulationPage() {
   ) => {
     const angleDiff = Math.abs(boatDir - windDir);
     const normalizedDiff = Math.min(angleDiff, 360 - angleDiff);
-    const resistanceFactor = Math.cos((normalizedDiff * Math.PI) / 180); // 1 → aynı yönde, -1 → karşı yönde
-    const adjustedSpeed = speedKts + windSpeed * resistanceFactor * 0.3; // 0.3: etki katsayısı
+    const resistanceFactor = Math.cos((normalizedDiff * Math.PI) / 180);
+    const adjustedSpeed = speedKts + windSpeed * resistanceFactor * 0.3;
     return Math.max(0, adjustedSpeed);
   };
 
-  function move(
+  // move fonksiyonu: from'dan bearing yönünde distanceKm ilerle
+  const move = (
     from: [number, number],
     bearingDeg: number,
     distanceKm: number
-  ): [number, number] {
-    const R = 6371; // Dünya yarıçapı km
+  ): [number, number] => {
     const [lat1, lon1] = from.map((d) => (d * Math.PI) / 180);
     const brng = (bearingDeg * Math.PI) / 180;
 
     const lat2 = Math.asin(
-      Math.sin(lat1) * Math.cos(distanceKm / R) +
-        Math.cos(lat1) * Math.sin(distanceKm / R) * Math.cos(brng)
+      Math.sin(lat1) * Math.cos(distanceKm / EARTH_R) +
+        Math.cos(lat1) * Math.sin(distanceKm / EARTH_R) * Math.cos(brng)
     );
     const lon2 =
       lon1 +
       Math.atan2(
-        Math.sin(brng) * Math.sin(distanceKm / R) * Math.cos(lat1),
-        Math.cos(distanceKm / R) - Math.sin(lat1) * Math.sin(lat2)
+        Math.sin(brng) * Math.sin(distanceKm / EARTH_R) * Math.cos(lat1),
+        Math.cos(distanceKm / EARTH_R) - Math.sin(lat1) * Math.sin(lat2)
       );
 
     return [
-      Number(((lat2 * 180) / Math.PI).toFixed(4)),
-      Number(((lon2 * 180) / Math.PI).toFixed(4)),
+      Number(((lat2 * 180) / Math.PI).toFixed(5)),
+      Number(((lon2 * 180) / Math.PI).toFixed(5)),
     ];
-  }
+  };
 
+  // Haversine ile km cinsinden mesafe
+  const distanceBetween = (a: [number, number], b: [number, number]) => {
+    const dLat = ((b[0] - a[0]) * Math.PI) / 180;
+    const dLon = ((b[1] - a[1]) * Math.PI) / 180;
+    const lat1 = (a[0] * Math.PI) / 180;
+    const lat2 = (b[0] * Math.PI) / 180;
+
+    const h =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+    return EARTH_R * c; // km
+  };
+
+  // Simülasyon döngüsü (düzeltilmiş)
   useEffect(() => {
-    const loadWind = async () => {
-      try {
-        const data = await fetchWind(route[0][0], route[0][1]);
-        setWind(data);
-      } catch (error) {
-        console.error("Rüzgar verisi alınamadı:", error);
-      }
+    if (!route || route.length < 2) return;
+
+    let pos = route[0];
+    let nextIndex = 1;
+    let intervalId: number | null = null;
+    let running = false; // yeniden giriş kontrolü
+
+    const startSimulation = async () => {
+      let windData = await fetchWind(pos[0], pos[1]);
+      setCurrentPos(pos);
+
+      intervalId = window.setInterval(async () => {
+        if (running) return; // önceki adım tamamlanmadıysa atla
+        running = true;
+        try {
+          if (nextIndex >= route.length) {
+            if (intervalId !== null) window.clearInterval(intervalId);
+            running = false;
+            return;
+          }
+
+          // Bu adımda 1 saniye = 1 saat kabulüyle gidilecek toplam km
+          // (isteğe göre bu satırı küçülterek daha yumuşak hareket sağlarsın)
+          const initialDir = calculateBoatDir(pos, route[nextIndex]);
+          const effectiveSpeedKts = calculateEffectiveSpeed(
+            initialDir,
+            windData.windDirection,
+            windData.windSpeed
+          );
+          let remainingKm = effectiveSpeedKts * 1.852; // km (1 saatlik mesafe)
+          // remainingKm aynı tick içinde birden fazla waypoint'i geçebilecek şekilde tüketilecek
+
+          while (remainingKm > 0 && nextIndex < route.length) {
+            const next = route[nextIndex];
+            const distToNext = distanceBetween(pos, next);
+
+            if (remainingKm >= distToNext) {
+              // Bu adım içinde waypoint'e varılıyor (ve kalan km varsa bir sonraki segmente aktar)
+              remainingKm -= distToNext;
+              pos = next;
+              setCurrentPos(pos);
+              nextIndex++;
+
+              // waypoint'e varınca yeni rüzgar verisini al
+              windData = await fetchWind(pos[0], pos[1]);
+
+              // eğer rota bitti ise döngüyü kes
+              if (nextIndex >= route.length) {
+                if (intervalId !== null) window.clearInterval(intervalId);
+                break;
+              }
+              // döngü devam ederse remainingKm ile bir sonraki segmentte devam edilecek
+            } else {
+              // waypoint'e ulaşmadan sadece remainingKm kadar ilerle
+              const segDir = calculateBoatDir(pos, route[nextIndex]);
+              const newPos = move(pos, segDir, remainingKm);
+              pos = newPos;
+              setCurrentPos(newPos);
+
+              // bu yeni pozisyona göre rüzgar al (bir sonraki tick'te kullanılacak)
+              windData = await fetchWind(newPos[0], newPos[1]);
+
+              // Tüm remaining tüketildi, bu tick bitiyor
+              remainingKm = 0;
+            }
+          }
+        } catch (err) {
+          console.error("Simülasyon hatası:", err);
+        } finally {
+          running = false;
+        }
+      }, intervalMs);
     };
 
-    loadWind();
-  }, []);
+    startSimulation();
 
-  useEffect(() => {
-    if (!wind) return;
-
-    const boatDirection = calculateBoatDir(currentPos || route[0], route[1]);
-    const effectiveSpeedKts = calculateEffectiveSpeed(
-      boatDirection,
-      wind.windDirection,
-      wind.windSpeed
-    );
-
-    const distanceKm = effectiveSpeedKts * 1.852; //1 knot ≈ 1.852 km/h  1 saniye = 1 saat → km;
-    const newPos = move(currentPos || route[0], boatDirection, distanceKm);
-    setCurrentPos(newPos);
-  }, [wind]);
+    return () => {
+      if (intervalId !== null) window.clearInterval(intervalId);
+    };
+  }, [route]);
 
   return (
     <div style={{ height: "100vh", width: "100%" }}>
-      <Map route={route} isSimulation={true} />
+      <Map
+        route={route}
+        currentPos={currentPos}
+        boatDir={boatDir || 0}
+        isSimulation={true}
+      />
     </div>
   );
 }

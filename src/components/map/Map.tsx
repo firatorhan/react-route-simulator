@@ -16,24 +16,18 @@ interface MapProps {
   route: [number, number][];
   onRouteChange?: (newRoute: [number, number][]) => void;
   isSimulation?: boolean;
+  currentPos?: [number, number] | null;
+  boatDir?: number | null;
 }
 
-export default function Map({ route, isSimulation, onRouteChange }: MapProps) {
+export default function Map({
+  route,
+  isSimulation,
+  onRouteChange,
+  currentPos,
+  boatDir = 0,
+}: MapProps) {
   const [localRoute, setLocalRoute] = useState<[number, number][]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [progress, setProgress] = useState(0);
-
-  const calculateAngle = (start: [number, number], end: [number, number]) => {
-    const deltaLng = end[1] - start[1];
-    const deltaLat = end[0] - start[0];
-    const angle = (Math.atan2(deltaLng, deltaLat) * 180) / Math.PI;
-    return angle;
-  };
-
-  const [boatPosition, setBoatPosition] = useState<{
-    position: [number, number];
-    angle: number;
-  } | null>();
 
   const handleMarkerDrag = (index: number, event: L.LeafletEvent) => {
     const marker = event.target as L.Marker;
@@ -50,60 +44,34 @@ export default function Map({ route, isSimulation, onRouteChange }: MapProps) {
     setLocalRoute(route);
   }, [route]);
 
-  useEffect(() => {
-    if (!route || route.length === 0) return;
-    setLocalRoute(route);
-    setCurrentIndex(0);
-    setProgress(0);
-  }, [route]);
-
-  useEffect(() => {
-    if (!isSimulation) return;
-    if (localRoute.length < 2) return;
-
-    const dt = 0.1;
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        let next = prev + dt;
-        let idx = currentIndex;
-        if (next >= 1) {
-          next = 0;
-          idx = idx + 1;
-          if (idx >= localRoute.length - 1) {
-            clearInterval(interval);
-            return 1;
-          }
-          setCurrentIndex(idx);
-        }
-        return next;
-      });
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [isSimulation, localRoute, currentIndex]);
-
-  // Bot pozisyonu ve açısı
-  useEffect(() => {
-    if (!isSimulation || localRoute.length < 2) return;
-    const start = localRoute[currentIndex];
-    const end =
-      currentIndex >= localRoute.length - 1
-        ? start
-        : localRoute[currentIndex + 1];
-    const lat = start[0] + (end[0] - start[0]) * progress;
-    const lng = start[1] + (end[1] - start[1]) * progress;
-    const angle = calculateAngle(start, end);
-    
-    setBoatPosition({ position: [lat, lng], angle });
-  }, [progress, currentIndex, localRoute, isSimulation]);
-
   if (localRoute.length === 0) return null;
+
+  let completedPath: [number, number][] = [];
+  let remainingPath: [number, number][] = [];
+
+  if (isSimulation && currentPos) {
+    let insertIndex = 0;
+    for (let i = 0; i < localRoute.length - 1; i++) {
+      const [lat1, lon1] = localRoute[i];
+      const [lat2, lon2] = localRoute[i + 1];
+      const d1 = Math.hypot(currentPos[0] - lat1, currentPos[1] - lon1);
+      const d2 = Math.hypot(currentPos[0] - lat2, currentPos[1] - lon2);
+      const segLen = Math.hypot(lat2 - lat1, lon2 - lon1);
+      if (d1 + d2 <= segLen * 1.05) {
+        insertIndex = i + 1;
+        break;
+      }
+    }
+
+    completedPath = [...localRoute.slice(0, insertIndex), currentPos];
+    remainingPath = [currentPos, ...localRoute.slice(insertIndex)];
+  }
 
   return (
     <MapContainer
       className={styles.mapContainer}
-      center={localRoute[0]}
-      zoom={13}
+      center={localRoute[localRoute.length - 1]}
+      zoom={10}
       scrollWheelZoom={true}
     >
       <TileLayer
@@ -156,51 +124,19 @@ export default function Map({ route, isSimulation, onRouteChange }: MapProps) {
         </Marker>
       ))}
 
-      {isSimulation && boatPosition && (
-        <Marker
-          position={boatPosition.position}
-          icon={boatIcon(boatPosition.angle)}
-        />
+      {isSimulation && currentPos && (
+        <Marker position={currentPos} icon={boatIcon(boatDir!)} />
       )}
 
-      {isSimulation ? (
-        localRoute.map((_, idx) => {
-          if (idx === localRoute.length - 1) return null;
-          const start = localRoute[idx];
-          const end = localRoute[idx + 1];
-          let segments: [number, number][][] = [];
-          if (idx < currentIndex) {
-            segments.push([start, end]);
-            return (
-              <Polyline
-                key={`segment-${idx}-full`}
-                positions={segments[0]}
-                color="green"
-              />
-            );
-          } else if (idx === currentIndex) {
-            const latMid = start[0] + (end[0] - start[0]) * progress;
-            const lngMid = start[1] + (end[1] - start[1]) * progress;
-            segments.push([start, [latMid, lngMid]]);
-            segments.push([[latMid, lngMid], end]);
-            return (
-              <div key={`segment-${idx}-partial`}>
-                <Polyline positions={segments[0]} color="green" />
-                <Polyline positions={segments[1]} color="red" />
-              </div>
-            );
-          } else {
-            return (
-              <Polyline
-                key={`segment-${idx}-red`}
-                positions={[start, end]}
-                color="red"
-              />
-            );
-          }
-        })
-      ) : (
+      {!isSimulation && (
         <Polyline positions={localRoute} color="white" dashArray={[10]} />
+      )}
+
+      {isSimulation && currentPos && (
+        <>
+          <Polyline positions={completedPath} color="green" />
+          <Polyline positions={remainingPath} color="red" dashArray={[8]} />
+        </>
       )}
     </MapContainer>
   );

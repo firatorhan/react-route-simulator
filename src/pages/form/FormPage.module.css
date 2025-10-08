@@ -107,3 +107,9 @@
   padding: 10px 20px;
   cursor: pointer;
 }
+
+.disabledAddPoint {
+  opacity: 0.4;
+ 
+  cursor: not-allowed;
+}
