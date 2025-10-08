@@ -1,5 +1,6 @@
 
-.input {
-  padding: 8px;
-  border: 1px solid #ccc;
+
+.mapContainer {
+  height: "100vh";
+  width: "100%";
 }

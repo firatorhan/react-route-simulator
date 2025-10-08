@@ -77,8 +77,8 @@
   flex-direction: column;
 }
 .mapContainerWrapper {
-  flex: 1 1 auto; /* kalan tüm alan map için */
-  min-height: 200px; /* opsiyonel minimum yükseklik */
+  flex: 1 1 auto; 
+  min-height: 200px; 
 }
 
 .modalActions {
