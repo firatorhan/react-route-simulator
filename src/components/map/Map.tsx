@@ -10,7 +10,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useEffect, useState } from "react";
 import CoordinateField from "../coordinate-field/CoordinateField";
-import { boatIcon, createHtmlMarker } from "./Mapconstant";
+import { boatIcon, createHtmlMarker } from "./MapConstant";
 
 interface MapProps {
   route: [number, number][];

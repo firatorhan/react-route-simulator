@@ -1,4 +1,4 @@
-// mapConstants.ts
+
 import L from "leaflet";
 
 export const ICON_SIZE = [80, 80] as [number, number];

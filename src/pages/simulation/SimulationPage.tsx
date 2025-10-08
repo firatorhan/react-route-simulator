@@ -1,16 +1,24 @@
 import { useEffect, useState } from "react";
 import { useRoute } from "../../context/RouteContext";
 import Map from "../../components/map/Map";
+import InfoBox from "../../components/info-box/InfoBox";
+import styles from "./SimulationPage.module.css";
 
 interface WindData {
   windDirection: number;
   windSpeed: number;
 }
 
+interface BoatData {
+  boatDirection: number;
+  boatSpeed: number;
+}
+
 export default function SimulationPage() {
   const { route } = useRoute();
   const [currentPos, setCurrentPos] = useState<[number, number] | null>(null);
-  const [boatDir, setboatDir] = useState<number | null>(null);
+  const [boatData, setboatData] = useState<BoatData | null>(null);
+  const [windData, setWindData] = useState<WindData | null>(null);
 
   const speedKts = 7; // Sabit hız (knot)
   const intervalMs = 1000; // 1 saniye
@@ -21,6 +29,7 @@ export default function SimulationPage() {
       `https://weather-api.dugun.work/?latitude=${lat}&longitude=${lon}`
     );
     const json = await res.json();
+    setWindData(json.data);
     return json.data as WindData;
   };
 
@@ -34,8 +43,7 @@ export default function SimulationPage() {
       Math.cos(lat1) * Math.sin(lat2) -
       Math.sin(lat1) * Math.cos(lat2) * Math.cos(lon2 - lon1);
     let brng = (Math.atan2(y, x) * 180) / Math.PI;
-    setboatDir((brng + 360) % 360);
-    return (brng + 360) % 360;
+    return Math.round((brng + 360) % 360);
   };
 
   // Rüzgar etkisiyle efektif hız
@@ -48,7 +56,7 @@ export default function SimulationPage() {
     const normalizedDiff = Math.min(angleDiff, 360 - angleDiff);
     const resistanceFactor = Math.cos((normalizedDiff * Math.PI) / 180);
     const adjustedSpeed = speedKts + windSpeed * resistanceFactor * 0.3;
-    return Math.max(0, adjustedSpeed);
+    return Number(Math.max(0, adjustedSpeed).toFixed(1));
   };
 
   // move fonksiyonu: from'dan bearing yönünde distanceKm ilerle
@@ -122,6 +130,11 @@ export default function SimulationPage() {
             windData.windDirection,
             windData.windSpeed
           );
+          setboatData({
+            boatDirection: initialDir,
+            boatSpeed: effectiveSpeedKts,
+          });
+
           let remainingKm = effectiveSpeedKts * 1.852; // km (1 saatlik mesafe)
           // remainingKm aynı tick içinde birden fazla waypoint'i geçebilecek şekilde tüketilecek
 
@@ -175,11 +188,26 @@ export default function SimulationPage() {
   }, [route]);
 
   return (
-    <div style={{ height: "100vh", width: "100%" }}>
+    <div className={styles.container}>
+      <div className={styles.infoPanel}>
+        <InfoBox
+          label1="Wind Direction"
+          value1={`${windData?.windDirection || 0}°`}
+          label2="Wind Speed"
+          value2={`${windData?.windSpeed || 0} kt`}
+        />
+
+        <InfoBox
+          label1="Boat Direction"
+          value1={`${boatData?.boatDirection || 0}°`}
+          label2="Boat Speed"
+          value2={`${boatData?.boatSpeed || 0} kt"`}
+        />
+      </div>
       <Map
         route={route}
         currentPos={currentPos}
-        boatDir={boatDir || 0}
+        boatDir={boatData?.boatDirection || 0}
         isSimulation={true}
       />
     </div>
