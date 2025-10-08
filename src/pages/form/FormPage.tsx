@@ -4,10 +4,11 @@ import { Icons } from "../../components/icons";
 import { useState } from "react";
 import Modal from "../../components/modal/Modal";
 import Map from "../../components/map/Map";
+import { useNavigate } from "react-router-dom";
 
 export default function FormPage() {
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
-
   const [route, setRoute] = useState<[number, number][]>([[40.1516, 25.8805]]);
   const [tempRoute, setTempRoute] = useState<[number, number][]>([]);
 
@@ -36,6 +37,10 @@ export default function FormPage() {
 
     setTempRoute(newRoute);
     setOpen(true);
+  };
+
+  const handleGo = () => {
+    navigate("/simulation"); // ✅ yönlendirme burası
   };
 
   return (
@@ -70,7 +75,6 @@ export default function FormPage() {
             <span>Add Way Point</span>
           </div>
         </form>
-
         {open && (
           <Modal onClose={handleCancel}>
             <div className={styles.modalBody}>
@@ -96,8 +100,13 @@ export default function FormPage() {
             </div>
           </Modal>
         )}
-
-        <button className={styles.button}>Go!</button>
+        <button
+          disabled={route.length < 2}
+          className={styles.button}
+          onClick={handleGo}
+        >
+          Go!
+        </button>
       </div>
     </div>
   );

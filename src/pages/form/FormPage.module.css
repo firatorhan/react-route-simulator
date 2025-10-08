@@ -45,6 +45,10 @@
   padding: 10px;
   cursor: pointer;
 }
+.button:disabled {
+  opacity: 50%;
+  cursor: not-allowed;
+}
 
 .addPoint {
   display: flex;
