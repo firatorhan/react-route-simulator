@@ -3,6 +3,7 @@ import { useRoute } from "../../context/RouteContext";
 import Map from "../../components/map/Map";
 import InfoBox from "../../components/info-box/InfoBox";
 import styles from "./SimulationPage.module.css";
+import ErrorToast from "../../components/toast/ErrorToast";
 
 interface WindData {
   windDirection: number;
@@ -19,6 +20,7 @@ export default function SimulationPage() {
   const [currentPos, setCurrentPos] = useState<[number, number] | null>(null);
   const [boatData, setboatData] = useState<BoatData | null>(null);
   const [windData, setWindData] = useState<WindData | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const speedKts = 7; // Sabit hız (knot)
   const intervalMs = 1000; // 1 saniye
@@ -158,7 +160,9 @@ export default function SimulationPage() {
             }
           }
         } catch (err) {
-          console.error("Simülasyon hatası:", err);
+          setError(
+            `Simülasyon sırasında bir hata oluştu. lat: ${pos[0]} long: ${pos[1]}`
+          );
         } finally {
           running = false;
         }
@@ -195,6 +199,7 @@ export default function SimulationPage() {
         boatDir={boatData?.boatDirection || 0}
         isSimulation={true}
       />
+      {error && <ErrorToast message={error} onClose={() => setError(null)} />}
     </div>
   );
 }
