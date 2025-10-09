@@ -44,7 +44,7 @@ Integrates with a live weather API to fetch **wind direction** and **wind speed*
     "windSpeed": 6
   }
 }
-
+```
 
 ### ⛵ Dynamic Boat Simulation
 
