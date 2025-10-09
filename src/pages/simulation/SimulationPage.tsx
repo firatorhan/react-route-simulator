@@ -161,7 +161,7 @@ export default function SimulationPage() {
           }
         } catch (err) {
           setError(
-            `Simülasyon sırasında bir hata oluştu. lat: ${pos[0]} long: ${pos[1]}`
+            `An error occurred during simulation. lat: ${pos[0]} long: ${pos[1]}`
           );
         } finally {
           running = false;
