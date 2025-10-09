@@ -29,7 +29,22 @@ Built on **React Leaflet**, providing zoom, drag, and real-time visual feedback.
 
 ### 🌬️ Live Wind Data
 
-Integrates with a live weather API to fetch **wind direction and speed** for each coordinate.
+Integrates with a live weather API to fetch **wind direction** and **wind speed** for each coordinate in the simulation.
+
+#### 🛰️ Example API Response
+
+```json
+{
+  "meta": {
+    "latitude": "0",
+    "longitude": "0"
+  },
+  "data": {
+    "windDirection": 194,
+    "windSpeed": 6
+  }
+}
+
 
 ### ⛵ Dynamic Boat Simulation
 
