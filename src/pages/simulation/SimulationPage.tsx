@@ -33,7 +33,6 @@ export default function SimulationPage() {
     return json.data as WindData;
   };
 
-  // Küresel yön (bearing) hesaplama
   const calculateBoatDir = (start: [number, number], end: [number, number]) => {
     const [lat1, lon1] = start.map((d) => (d * Math.PI) / 180);
     const [lat2, lon2] = end.map((d) => (d * Math.PI) / 180);
@@ -46,7 +45,6 @@ export default function SimulationPage() {
     return Math.round((brng + 360) % 360);
   };
 
-  // Rüzgar etkisiyle efektif hız
   const calculateEffectiveSpeed = (
     boatDir: number,
     windDir: number,
@@ -59,7 +57,6 @@ export default function SimulationPage() {
     return Number(Math.max(0, adjustedSpeed).toFixed(1));
   };
 
-  // move fonksiyonu: from'dan bearing yönünde distanceKm ilerle
   const move = (
     from: [number, number],
     bearingDeg: number,
@@ -85,7 +82,6 @@ export default function SimulationPage() {
     ];
   };
 
-  // Haversine ile km cinsinden mesafe
   const distanceBetween = (a: [number, number], b: [number, number]) => {
     const dLat = ((b[0] - a[0]) * Math.PI) / 180;
     const dLon = ((b[1] - a[1]) * Math.PI) / 180;
@@ -99,21 +95,20 @@ export default function SimulationPage() {
     return EARTH_R * c; // km
   };
 
-  // Simülasyon döngüsü (düzeltilmiş)
   useEffect(() => {
     if (!route || route.length < 2) return;
 
     let pos = route[0];
     let nextIndex = 1;
     let intervalId: number | null = null;
-    let running = false; // yeniden giriş kontrolü
+    let running = false;
 
     const startSimulation = async () => {
       let windData = await fetchWind(pos[0], pos[1]);
       setCurrentPos(pos);
 
       intervalId = window.setInterval(async () => {
-        if (running) return; // önceki adım tamamlanmadıysa atla
+        if (running) return;
         running = true;
         try {
           if (nextIndex >= route.length) {
@@ -122,8 +117,6 @@ export default function SimulationPage() {
             return;
           }
 
-          // Bu adımda 1 saniye = 1 saat kabulüyle gidilecek toplam km
-          // (isteğe göre bu satırı küçülterek daha yumuşak hareket sağlarsın)
           const initialDir = calculateBoatDir(pos, route[nextIndex]);
           const effectiveSpeedKts = calculateEffectiveSpeed(
             initialDir,
@@ -135,40 +128,32 @@ export default function SimulationPage() {
             boatSpeed: effectiveSpeedKts,
           });
 
-          let remainingKm = effectiveSpeedKts * 1.852; // km (1 saatlik mesafe)
-          // remainingKm aynı tick içinde birden fazla waypoint'i geçebilecek şekilde tüketilecek
+          let remainingKm = effectiveSpeedKts * 1.852;
 
           while (remainingKm > 0 && nextIndex < route.length) {
             const next = route[nextIndex];
             const distToNext = distanceBetween(pos, next);
 
             if (remainingKm >= distToNext) {
-              // Bu adım içinde waypoint'e varılıyor (ve kalan km varsa bir sonraki segmente aktar)
               remainingKm -= distToNext;
               pos = next;
               setCurrentPos(pos);
               nextIndex++;
 
-              // waypoint'e varınca yeni rüzgar verisini al
               windData = await fetchWind(pos[0], pos[1]);
 
-              // eğer rota bitti ise döngüyü kes
               if (nextIndex >= route.length) {
                 if (intervalId !== null) window.clearInterval(intervalId);
                 break;
               }
-              // döngü devam ederse remainingKm ile bir sonraki segmentte devam edilecek
             } else {
-              // waypoint'e ulaşmadan sadece remainingKm kadar ilerle
               const segDir = calculateBoatDir(pos, route[nextIndex]);
               const newPos = move(pos, segDir, remainingKm);
               pos = newPos;
               setCurrentPos(newPos);
 
-              // bu yeni pozisyona göre rüzgar al (bir sonraki tick'te kullanılacak)
               windData = await fetchWind(newPos[0], newPos[1]);
 
-              // Tüm remaining tüketildi, bu tick bitiyor
               remainingKm = 0;
             }
           }
