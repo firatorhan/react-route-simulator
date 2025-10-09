@@ -1,73 +1,74 @@
-# React + TypeScript + Vite
+# ⛵ Wind Simulation Map
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This project is an interactive **boat route simulation tool** that allows users to create, visualize, and simulate sailing routes on a live map.  
+It integrates real-time **wind data**, dynamic **boat direction** updates, and an animated **map-based simulation**.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🧩 Tech Stack
 
-## React Compiler
+- **React 19 (TypeScript)**
+- **React Leaflet** (Map Visualization)
+- **Context API** (State Management)
+- **CSS Modules**
+- **Vite** (Bundler)
+- **Custom Weather API Integration**
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+## ✨ Features
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### 🧭 Route Creation
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+Users can create a route by adding **waypoints** dynamically.  
+Each point can be adjusted by dragging markers on the map.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+### 🗺️ Interactive Map
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+Built on **React Leaflet**, providing zoom, drag, and real-time visual feedback.
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### 🌬️ Live Wind Data
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Integrates with a live weather API to fetch **wind direction and speed** for each coordinate.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### ⛵ Dynamic Boat Simulation
+
+Simulates boat movement along the defined route.  
+Boat direction and speed dynamically adjust based on **wind angle** and **resistance factor**.
+
+### 🧮 Realistic Speed Calculation
+
+Includes a physical simulation formula:
+
+Speed is recalculated at each step of the route.
+
+### ⚡ Real-Time Data Panel
+
+An **InfoBox** displays live data such as:
+
+- Wind Direction & Speed
+- Boat Direction & Speed
+
+Values update every few seconds during simulation.
+
+### 📍 Route Editing Modal
+
+A clean modal interface allows users to edit routes visually by dragging points on the map.
+
+---
+
+## ⚙️ Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/firatorhan/route-simulator.git
+
+# Enter project directory
+cd route-simulator
+
+# Install dependencies
+npm install
+
+# Run the development server
+npm run dev
 ```
