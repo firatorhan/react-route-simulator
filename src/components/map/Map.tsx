@@ -70,7 +70,7 @@ export default function Map({
   return (
     <MapContainer
       className={styles.mapContainer}
-      center={localRoute[localRoute.length - 1]}
+      center={isSimulation ? localRoute[0] : localRoute[localRoute.length - 1]}
       zoom={10}
       scrollWheelZoom={true}
     >
