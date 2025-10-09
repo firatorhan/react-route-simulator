@@ -4,7 +4,11 @@ This project is an interactive **boat route simulation tool** that allows users 
 It integrates real-time **wind data**, dynamic **boat direction** updates, and an animated **map-based simulation**.
 
 ---
+<img width="1680" height="1010" alt="form" src="https://github.com/user-attachments/assets/3f0b0c0f-ee19-4717-bbb0-2991df5650f7" />
+<img width="1680" height="1010" alt="select-point" src="https://github.com/user-attachments/assets/5a558a9d-212c-44e7-9f59-26110cde24bf" />
+<img width="1680" height="1010" alt="simulation" src="https://github.com/user-attachments/assets/4b3b7d76-63a7-4d2c-be16-c55a7954653b" />
 
+---
 ## 🧩 Tech Stack
 
 - **React 19 (TypeScript)**
