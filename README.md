@@ -80,7 +80,7 @@ A clean modal interface allows users to edit routes visually by dragging points 
 
 ```bash
 # Clone the repository
-git clone https://github.com/firatorhan/route-simulator.git
+git clone https://github.com/firatorhan/react-route-simulator.git
 
 # Enter project directory
 cd route-simulator
