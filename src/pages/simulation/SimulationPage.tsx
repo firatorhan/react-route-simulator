@@ -27,12 +27,24 @@ export default function SimulationPage() {
   const EARTH_R = 6371; // km
 
   const fetchWind = async (lat: number, lon: number): Promise<WindData> => {
-    const res = await fetch(
-      `https://weather-api.dugun.work/?latitude=${lat}&longitude=${lon}`
-    );
-    const json = await res.json();
-    setWindData(json.data);
-    return json.data as WindData;
+    // Simüle edilmiş gecikme
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    // %20 ihtimalle hata response (örnek: ağ hatası)
+    const shouldFail = Math.random() < 0.2;
+    if (shouldFail) {
+      throw new Error("Rüzgar verisi alınamadı (simüle edilmiş hata)");
+    }
+
+    // Koordinata bağlı random veri
+    const seed = Math.abs(Math.sin(lat * lon) * 10000);
+    const mockData: WindData = {
+      windDirection: Math.floor((seed * 997) % 360),
+      windSpeed: parseFloat(((seed % 20) + Math.random()).toFixed(1)),
+    };
+
+    setWindData(mockData);
+    return mockData;
   };
 
   const calculateBoatDir = (start: [number, number], end: [number, number]) => {
